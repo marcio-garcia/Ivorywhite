@@ -79,7 +79,7 @@ Ivorywhite is a network layer that goes on top of your preferred networking lib 
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "git@github.com:marcio-garcia/Ivorywhite.git", :tag => "1.0.0" }
+  s.source       = { :git => "https://github.com/marcio-garcia/Ivorywhite.git", :tag => "1.0.0" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
