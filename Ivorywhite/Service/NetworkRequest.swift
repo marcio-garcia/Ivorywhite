@@ -14,32 +14,5 @@ public protocol NetworkRequest {
     var httpHeaders: HTTPHeader? { get set }
     var parameters: Parameters? { get set }
     var encoding: ParameterEncoding? { get set }
-    func parse(data: Data) throws -> ModelType
+    func parse(data: Data) throws -> ModelType?
 }
-
-//extension NetworkRequest where ModelType: Decodable {
-//    public init(baseURL: URL,
-//                            path: String,
-//                            httpMethod: HTTPMethod,
-//                            httpHeaders: HTTPHeader?,
-//                            parameters: Parameters?,
-//                            encoding: ParameterEncoding?) {
-//
-//        self.init(parse: { data in
-//            try JSONDecoder().decode(ModelType.self, from: data)
-//        })
-//
-//        self.baseURL = baseURL
-//        self.path = path
-//        self.httpMethod = httpMethod
-//        self.httpHeaders = httpHeaders
-//        self.parameters = parameters
-//        self.encoding = encoding
-//    }
-//}
-
-//extension NetworkRequest {
-//    func parse(data: Data) throws -> ModelType {
-//        try JSONDecoder().decode(ModelType.self, from: data)
-//    }
-//}

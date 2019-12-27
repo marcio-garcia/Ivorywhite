@@ -15,42 +15,56 @@ public enum NetworkError: String, Error {
     case unableToDecode         = "We could not decode the response."
 }
 
-//private class StatusCode {
-//    func handle(_ response: HTTPURLResponse) -> Result<Int?, NetworkError> {
-//        switch response.statusCode {
-//        case 200...299: return .success(nil)
-//        case 401...499: return .failure(.authenticationError)
-//        case 500...599: return .failure(.badRequest)
-//        case 600:       return .failure(.outdated)
-//        default:        return .failure(.failed)
-//        }
-//    }
-//}
+public struct Response<T> {
+    public var statusCode: Int
+    public var value: T?
+}
 
 public class Service: NetworkService {
 
     private var tasks: [TaskId: URLSessionTask] = [:]
-    
-    public init() {}
+    private var debugMode = false
+
+    public init(debugMode: Bool = false) {
+        self.debugMode = debugMode
+    }
     
     public func request<T: NetworkRequest>(_ networkRequest: T,
-                                           completion: @escaping (Result<T.ModelType, Error>)->Void) -> TaskId {
+                                           completion: @escaping (Result<Response<T.ModelType>, Error>)->Void) -> TaskId {
+
         let session = URLSession.shared
         let taskId: TaskId = UUID()
         do {
             let request = try self.buildUrlRequest(from: networkRequest)
             let task = session.dataTask(with: request, completionHandler: { [weak self] (data, response, error) in
-                completion(Result{
-                    self?.tasks.removeValue(forKey: taskId)
+
+                if self?.debugMode ?? false {
+                    self?.logResponse(response: response, data: data)
+                }
+
+                self?.tasks.removeValue(forKey: taskId)
+
+                do {
                     if let e = error { throw e }
+                    guard let resp = response as? HTTPURLResponse else { throw NetworkError.failed }
                     guard let responseData = data else { throw NetworkError.noData }
-                    return try networkRequest.parse(data: responseData)
-                })
+
+                    let parsedData = try networkRequest.parse(data: responseData)
+                    completion(Result{
+                        return Response<T.ModelType>(statusCode: resp.statusCode, value: parsedData)
+                    })
+                } catch is NetworkError {
+                    guard let e = error else { return }
+                    completion(.failure(e))
+                } catch {
+                    print("Unexpected request error: \(error.localizedDescription)")
+                }
             })
             tasks[taskId] = task
             task.resume()
             return taskId
         } catch {
+            debugPrint("Ivorywhite: Request error: \(error.localizedDescription)")
             completion(.failure(NetworkError.badRequest))
         }
         return UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
@@ -64,17 +78,17 @@ public class Service: NetworkService {
     }
     
     private func buildUrlRequest<T: NetworkRequest>(from route: T) throws -> URLRequest {
-        
+
         var request = URLRequest(url: route.baseURL.appendingPathComponent(route.path),
                                  cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
                                  timeoutInterval: 10.0)
         
         request.httpMethod = route.httpMethod.rawValue
-        
+
         if let headers = route.httpHeaders {
             addAdditionalHeaders(headers, request: &request)
         }
-        
+
         if let parameters = route.parameters {
             do {
                 try configureParameters(parameters: parameters,
@@ -84,6 +98,11 @@ public class Service: NetworkService {
                 throw error
             }
         }
+
+        if debugMode {
+            logRequest(route: route, request: request)
+        }
+        
         return request
     }
 
@@ -113,5 +132,26 @@ public class Service: NetworkService {
         for (key, value) in headers {
             request.setValue(value, forHTTPHeaderField: key)
         }
+    }
+
+    private func logRequest<T: NetworkRequest>(route: T, request: URLRequest) {
+        print("-------------- Request --------------")
+        print("Method: \(route.httpMethod.rawValue)")
+        print("BaseURL: \(route.baseURL)")
+        print("Path: \(route.path)")
+        print("Headers: \(request.allHTTPHeaderFields?.description ?? "nil")")
+        print("Parameters: \(route.parameters?.description ?? "nil")")
+        print("Request: \(request.debugDescription)")
+        if let body = request.httpBody {
+            let httpBodyString = String(data: body, encoding: .utf8)!
+            print("Body: \(httpBodyString)")
+        }
+    }
+
+    private func logResponse(response: URLResponse?, data: Data?) {
+        guard let resp = response else { return }
+        print("Response: \(resp.debugDescription)")
+        guard let data = data, let dataString = String(data: data, encoding: .utf8) else { return }
+        print(dataString)
     }
 }
