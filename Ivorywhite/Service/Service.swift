@@ -49,15 +49,19 @@ public class Service: NetworkService {
                     guard let resp = response as? HTTPURLResponse else { throw NetworkError.failed }
                     guard let responseData = data else { throw NetworkError.noData }
 
-                    let parsedData = try networkRequest.parse(data: responseData)
-                    completion(Result{
-                        return Response<T.ModelType>(statusCode: resp.statusCode, value: parsedData)
-                    })
+                    if resp.statusCode > 299 { throw NetworkError.badRequest }
+
+                    if let parsedData = try networkRequest.parse(data: responseData) {
+                        completion(Result{
+                            return Response<T.ModelType>(statusCode: resp.statusCode, value: parsedData)
+                        })
+                    } else {
+                        completion(.failure(NetworkError.unableToDecode))
+                    }
                 } catch is NetworkError {
-                    guard let e = error else { return }
-                    completion(.failure(e))
+                    completion(.failure(NetworkError.badRequest))
                 } catch {
-                    print("Unexpected request error: \(error.localizedDescription)")
+                    completion(.failure(error))
                 }
             })
             tasks[taskId] = task
