@@ -6,10 +6,11 @@
 //  Copyright © 2019 Marcio Garcia. All rights reserved.
 //
 
+import Foundation
+
 public typealias TaskId = UUID
 
 public protocol NetworkService {
-    //func request<T: NetworkRequest>(_ networkRequest: T, completion: @escaping (Result<T.ModelType?, Error>)->Void) -> TaskId
     func request<T: NetworkRequest>(_ networkRequest: T, completion: @escaping (Result<Response<T.ModelType>, Error>)->Void) -> TaskId
-    func cancel(taskId: UUID)
+    func cancel(taskId: TaskId)
 }

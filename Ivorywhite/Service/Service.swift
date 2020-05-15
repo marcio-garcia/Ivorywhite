@@ -6,6 +6,8 @@
 //  Copyright © 2019 Marcio Garcia. All rights reserved.
 //
 
+import Foundation
+
 public enum NetworkError: String, Error {
     case authenticationError    = "You need to be authenticated first."
     case badRequest             = "Bad request."

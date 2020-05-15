@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "Ivorywhite"
-  s.version      = "1.0.0"
+  s.version      = "0.1.0"
   s.summary      = "A modular network layer to be used with a networking lib."
 
   # This description is used to generate tags and improve search results.
@@ -55,8 +55,8 @@ Ivorywhite is a network layer that goes on top of your preferred networking lib 
 
   s.author             = { "Marcio Garcia" => "marcio@oxltech.com" }
   # Or just: s.author    = "Marcio Garcia"
-  # s.authors            = { "Marcio Garcia" => "marcio.garcia@dextra-sw.com" }
-  # s.social_media_url   = "http://twitter.com/Marcio Garcia"
+  # s.authors            = { "Your Name" => "username@domain.com" }
+  # s.social_media_url   = "http://twitter.com/username"
 
   # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
@@ -79,7 +79,7 @@ Ivorywhite is a network layer that goes on top of your preferred networking lib 
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "https://github.com/marcio-garcia/Ivorywhite.git", :tag => "1.0.0" }
+  s.source       = { :git => "https://github.com/marcio-garcia/Ivorywhite.git", :tag => "0.1.0" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
