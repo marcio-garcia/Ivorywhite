@@ -18,6 +18,7 @@
 		0CE7A5CA23AE5EC60092590A /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE7A5C523AE5EC60092590A /* NetworkService.swift */; };
 		0CE7A5CB23AE5EC60092590A /* Service.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE7A5C623AE5EC60092590A /* Service.swift */; };
 		0CE7A5CC23AE5EC60092590A /* HTTPMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE7A5C723AE5EC60092590A /* HTTPMethod.swift */; };
+		257BAB37248032EF008020F7 /* Ivorywhite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 257BAB36248032EF008020F7 /* Ivorywhite.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +46,7 @@
 		0CE7A5C523AE5EC60092590A /* NetworkService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
 		0CE7A5C623AE5EC60092590A /* Service.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Service.swift; sourceTree = "<group>"; };
 		0CE7A5C723AE5EC60092590A /* HTTPMethod.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPMethod.swift; sourceTree = "<group>"; };
+		257BAB36248032EF008020F7 /* Ivorywhite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ivorywhite.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +93,7 @@
 				0CE7A5BB23AE5E950092590A /* Encoding */,
 				0CE7A5A423AE5DB50092590A /* Ivorywhite.h */,
 				0CE7A5A523AE5DB50092590A /* Info.plist */,
+				257BAB36248032EF008020F7 /* Ivorywhite.swift */,
 			);
 			path = Ivorywhite;
 			sourceTree = "<group>";
@@ -236,6 +239,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				257BAB37248032EF008020F7 /* Ivorywhite.swift in Sources */,
 				0CE7A5C223AE5EB40092590A /* URLEncoder.swift in Sources */,
 				0CE7A5CB23AE5EC60092590A /* Service.swift in Sources */,
 				0CE7A5C123AE5EB40092590A /* ParametersEncoding.swift in Sources */,
@@ -404,7 +408,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.3;
+				MARKETING_VERSION = 0.1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oxltech.Ivorywhite;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -432,7 +436,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.3;
+				MARKETING_VERSION = 0.1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oxltech.Ivorywhite;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
