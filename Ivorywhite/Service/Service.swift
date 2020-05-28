@@ -37,7 +37,7 @@ public struct Response<T> {
     public var value: T?
 }
 
-public class Service: NetworkService {
+class Service: NetworkService {
 
     private var tasks: [TaskId: URLSessionTask] = [:]
     private var debugMode = false
@@ -46,7 +46,7 @@ public class Service: NetworkService {
         self.debugMode = debugMode
     }
     
-    public func request<T: NetworkRequest>(_ networkRequest: T,
+    func request<T: NetworkRequest>(_ networkRequest: T,
                                            completion: @escaping (Result<Response<T.ModelType>, Error>) -> Void) -> TaskId {
 
         let session = URLSession.shared
@@ -89,7 +89,7 @@ public class Service: NetworkService {
         return UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
     }
 
-    public func request(with url: URL, completion: @escaping (Result<Response<Data>, Error>) -> Void) -> TaskId {
+    func request(with url: URL, completion: @escaping (Result<Response<Data>, Error>) -> Void) -> TaskId {
 
         let session = URLSession.shared
         let taskId: TaskId = UUID()
@@ -117,7 +117,7 @@ public class Service: NetworkService {
         return taskId
     }
 
-    public func cancel(taskId: TaskId) {
+    func cancel(taskId: TaskId) {
         if let task = tasks[taskId] {
             task.cancel()
             tasks.removeValue(forKey: taskId)
