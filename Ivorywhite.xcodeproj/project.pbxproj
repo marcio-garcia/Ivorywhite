@@ -92,8 +92,8 @@
 				0CE7A5BC23AE5E9E0092590A /* Service */,
 				0CE7A5BB23AE5E950092590A /* Encoding */,
 				0CE7A5A423AE5DB50092590A /* Ivorywhite.h */,
-				0CE7A5A523AE5DB50092590A /* Info.plist */,
 				257BAB36248032EF008020F7 /* Ivorywhite.swift */,
+				0CE7A5A523AE5DB50092590A /* Info.plist */,
 			);
 			path = Ivorywhite;
 			sourceTree = "<group>";
@@ -408,7 +408,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.5;
+				MARKETING_VERSION = 0.1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oxltech.Ivorywhite;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -436,7 +436,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.5;
+				MARKETING_VERSION = 0.1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oxltech.Ivorywhite;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;

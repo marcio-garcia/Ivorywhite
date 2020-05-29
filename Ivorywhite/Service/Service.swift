@@ -42,7 +42,7 @@ class Service: NetworkService {
     private var tasks: [TaskId: URLSessionTask] = [:]
     private var debugMode = false
 
-    public init(debugMode: Bool = false) {
+    init(debugMode: Bool = false) {
         self.debugMode = debugMode
     }
     

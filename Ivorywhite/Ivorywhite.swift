@@ -8,11 +8,13 @@
 
 public final class Ivorywhite {
     
-    static var networkService: NetworkService?
+    public static var shared = Ivorywhite()
+    
+    private var networkService: NetworkService?
     
     private init() {}
     
-    public static func service(debugMode: Bool) -> NetworkService {
+    public func service(debugMode: Bool) -> NetworkService {
         if let networkService = self.networkService {
             return networkService
         } else {
