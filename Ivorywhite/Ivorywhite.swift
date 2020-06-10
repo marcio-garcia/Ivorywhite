@@ -14,11 +14,11 @@ public final class Ivorywhite {
     
     private init() {}
     
-    public func service(debugMode: Bool) -> NetworkService {
+    public func service(debugMode: Bool, timeoutIntervalForRequest: TimeInterval) -> NetworkService {
         if let networkService = self.networkService {
             return networkService
         } else {
-            networkService = Service(debugMode: debugMode)
+            networkService = Service(debugMode: debugMode, timeoutIntervalForRequest: timeoutIntervalForRequest)
             return networkService!
         }
     }
