@@ -39,23 +39,17 @@ public struct Response<T> {
 
 class Service: NetworkService {
 
-    private var urlSession: URLSession
     private var tasks: [TaskId: URLSessionTask] = [:]
     private var debugMode = false
-    private var timeoutIntervalForRequest: TimeInterval
 
-    init(debugMode: Bool = false, timeoutIntervalForRequest: TimeInterval = 60.0) {
+    init(debugMode: Bool = false) {
         self.debugMode = debugMode
-        self.timeoutIntervalForRequest = timeoutIntervalForRequest
-        let config = URLSessionConfiguration()
-        config.timeoutIntervalForRequest = timeoutIntervalForRequest
-        self.urlSession = URLSession(configuration: config)
     }
     
     func request<T: NetworkRequest>(_ networkRequest: T,
                                            completion: @escaping (Result<Response<T.ModelType>, Error>) -> Void) -> TaskId {
 
-        let session = urlSession
+        let session = URLSession.shared
         let taskId: TaskId = UUID()
         do {
             let request = try self.buildUrlRequest(from: networkRequest)
@@ -97,7 +91,7 @@ class Service: NetworkService {
 
     func request(with url: URL, completion: @escaping (Result<Response<Data>, Error>) -> Void) -> TaskId {
 
-        let session = urlSession
+        let session = URLSession.shared
         let taskId: TaskId = UUID()
         let task = session.dataTask(with: url) { [weak self] data, response, error in
             if self?.debugMode ?? false {
@@ -134,7 +128,7 @@ class Service: NetworkService {
 
         var request = URLRequest(url: route.baseURL.appendingPathComponent(route.path),
                                  cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
-                                 timeoutInterval: 10.0)
+                                 timeoutInterval: route.timeoutInterval)
         
         request.httpMethod = route.httpMethod.rawValue
 
