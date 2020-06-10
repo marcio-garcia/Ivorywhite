@@ -14,5 +14,6 @@ public protocol NetworkRequest {
     var httpHeaders: HTTPHeader? { get set }
     var parameters: Parameters? { get set }
     var encoding: ParameterEncoding? { get set }
+    var timeoutInterval: TimeInterval { get set }
     func parse(data: Data) throws -> ModelType?
 }
