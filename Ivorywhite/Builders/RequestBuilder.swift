@@ -42,7 +42,7 @@ class RequestBuilder: RequestBuildable {
             scheme = "https"
         }
 
-        baseURL = baseURL.replacingOccurrences(of: scheme, with: "")
+        baseURL = baseURL.replacingOccurrences(of: "\(scheme)://", with: "")
 
         urlComponents.scheme = scheme
         urlComponents.host = baseURL
