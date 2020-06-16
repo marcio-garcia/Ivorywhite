@@ -36,10 +36,10 @@ class RequestBuilder: RequestBuildable {
 
         var urlComponents = URLComponents()
         var baseURL = route.baseURL.absoluteString
-        var scheme = "http://"
+        var scheme = "http"
 
         if baseURL.contains("https") {
-            scheme = "https://"
+            scheme = "https"
         }
 
         baseURL = baseURL.replacingOccurrences(of: scheme, with: "")
