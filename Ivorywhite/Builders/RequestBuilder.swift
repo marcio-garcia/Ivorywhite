@@ -35,7 +35,17 @@ class RequestBuilder: RequestBuildable {
     private func buildUrl<T: NetworkRequest>(from route: T) -> URL {
 
         var urlComponents = URLComponents()
-        urlComponents.host = route.baseURL.absoluteString
+        var baseURL = route.baseURL.absoluteString
+        var scheme = "http://"
+
+        if baseURL.contains("https") {
+            scheme = "https://"
+        }
+
+        baseURL = baseURL.replacingOccurrences(of: scheme, with: "")
+
+        urlComponents.scheme = scheme
+        urlComponents.host = baseURL
         urlComponents.path = route.path
 
         if let parameters = route.parameters, let encoding = route.encoding, encoding == .urlEnconding {
