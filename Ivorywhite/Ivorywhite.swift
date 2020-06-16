@@ -11,6 +11,8 @@ public final class Ivorywhite {
     public static var shared = Ivorywhite()
     
     private var networkService: NetworkService?
+    private var logger: Logging?
+    private var requestBuilder: RequestBuilder?
     
     private init() {}
     
@@ -18,7 +20,11 @@ public final class Ivorywhite {
         if let networkService = self.networkService {
             return networkService
         } else {
-            networkService = Service(debugMode: debugMode)
+            logger = Logger()
+            requestBuilder = RequestBuilder()
+            networkService = Service(debugMode: debugMode,
+                                     requestBuilder: requestBuilder!,
+                                     logger: logger!)
             return networkService!
         }
     }

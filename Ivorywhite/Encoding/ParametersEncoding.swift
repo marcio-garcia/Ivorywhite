@@ -12,13 +12,3 @@ public enum ParameterEncoding {
     case jsonEncoding
     case urlEnconding
 }
-
-public protocol ParameterEncoder {
-    static func encode(urlRequest: inout URLRequest, with parameters: Parameters) throws
-}
-
-public enum EncodingError: String, Error {
-    case parameterNil   = "Parameters wew nil."
-    case encodingFailed = "Parameter encoding failed."
-    case missingURL     = "URL is nil."
-}
