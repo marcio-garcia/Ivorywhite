@@ -1,5 +1,5 @@
 //
-//  Router.swift
+//  Service.swift
 //  Network
 //
 //  Created by Marcio Garcia on 06/06/19.
@@ -41,22 +41,33 @@ class Service: NetworkService {
 
     private var tasks: [TaskId: URLSessionTask] = [:]
     private var debugMode = false
+    private let requestBuilder: RequestBuildable
+    private let logger: Logging
 
-    init(debugMode: Bool = false) {
+    init(debugMode: Bool = false, requestBuilder: RequestBuilder, logger: Logging) {
         self.debugMode = debugMode
+        self.requestBuilder = requestBuilder
+        self.logger = logger
     }
-    
+
+    func cancel(taskId: TaskId) {
+        if let task = tasks[taskId] {
+            task.cancel()
+            tasks.removeValue(forKey: taskId)
+        }
+    }
+
     func request<T: NetworkRequest>(_ networkRequest: T,
                                            completion: @escaping (Result<Response<T.ModelType>, Error>) -> Void) -> TaskId {
 
         let session = URLSession.shared
         let taskId: TaskId = UUID()
         do {
-            let request = try self.buildUrlRequest(from: networkRequest)
+            let request = try self.requestBuilder.build(from: networkRequest)
             let task = session.dataTask(with: request, completionHandler: { [weak self] (data, response, error) in
 
                 if self?.debugMode ?? false {
-                    self?.logResponse(response: response, data: data)
+                    self?.logger.logResponse(response: response, data: data)
                 }
 
                 self?.tasks.removeValue(forKey: taskId)
@@ -95,7 +106,7 @@ class Service: NetworkService {
         let taskId: TaskId = UUID()
         let task = session.dataTask(with: url) { [weak self] data, response, error in
             if self?.debugMode ?? false {
-                self?.logResponse(response: response, data: data)
+                self?.logger.logResponse(response: response, data: data)
             }
 
             self?.tasks.removeValue(forKey: taskId)
@@ -115,90 +126,5 @@ class Service: NetworkService {
         tasks[taskId] = task
         task.resume()
         return taskId
-    }
-
-    func cancel(taskId: TaskId) {
-        if let task = tasks[taskId] {
-            task.cancel()
-            tasks.removeValue(forKey: taskId)
-        }
-    }
-    
-    private func buildUrlRequest<T: NetworkRequest>(from route: T) throws -> URLRequest {
-
-        var request = URLRequest(url: route.baseURL.appendingPathComponent(route.path),
-                                 cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
-                                 timeoutInterval: route.timeoutInterval)
-        
-        request.httpMethod = route.httpMethod.rawValue
-
-        if let headers = route.httpHeaders {
-            addAdditionalHeaders(headers, request: &request)
-        }
-
-        if let parameters = route.parameters {
-            do {
-                try configureParameters(parameters: parameters,
-                                        encoding: route.encoding,
-                                        request: &request)
-            } catch {
-                throw error
-            }
-        }
-
-        if debugMode {
-            logRequest(route: route, request: request)
-        }
-        
-        return request
-    }
-
-    private func configureParameters(parameters: Parameters,
-                                     encoding: ParameterEncoding?,
-                                     request: inout URLRequest) throws {
-        
-        do {
-            guard let encoding = encoding else {
-                try JSONEncoder.encode(urlRequest: &request, with: parameters)
-                return
-            }
-            
-            switch encoding {
-            case .jsonEncoding:
-                try JSONEncoder.encode(urlRequest: &request, with: parameters)
-            case .urlEnconding:
-                try URLEncoder.encode(urlRequest: &request, with: parameters)
-            }
-        } catch {
-            throw error
-        }
-    }
-    
-    private func addAdditionalHeaders(_ additionalHeaders: HTTPHeader?, request: inout URLRequest) {
-        guard let headers = additionalHeaders else { return }
-        for (key, value) in headers {
-            request.setValue(value, forHTTPHeaderField: key)
-        }
-    }
-
-    private func logRequest<T: NetworkRequest>(route: T, request: URLRequest) {
-        print("-------------- Request --------------")
-        print("Method: \(route.httpMethod.rawValue)")
-        print("BaseURL: \(route.baseURL)")
-        print("Path: \(route.path)")
-        print("Headers: \(request.allHTTPHeaderFields?.description ?? "nil")")
-        print("Parameters: \(route.parameters?.description ?? "nil")")
-        print("Request: \(request.debugDescription)")
-        if let body = request.httpBody {
-            let httpBodyString = String(data: body, encoding: .utf8)!
-            print("Body: \(httpBodyString)")
-        }
-    }
-
-    private func logResponse(response: URLResponse?, data: Data?) {
-        guard let resp = response else { return }
-        print("Response: \(resp.debugDescription)")
-        guard let data = data, let dataString = String(data: data, encoding: .utf8) else { return }
-        print(dataString)
     }
 }
