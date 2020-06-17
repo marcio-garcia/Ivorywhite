@@ -9,21 +9,15 @@
 import Foundation
 
 public enum NetworkError: Error, CustomStringConvertible {
-    case authenticationError
-    case badRequest
-    case outdated
-    case failed
-    case noData
+    case invalidRsponse
     case unableToDecode
+    case error(Int)
 
     public var description: String {
         switch self {
-        case .authenticationError:  return "You need to be authenticated first."
-        case .badRequest:           return "Bad request."
-        case .outdated:             return "The url you requested is outdated."
-        case .failed:               return "The network request failed."
-        case .noData:               return "Response returned with no data to decode."
-        case .unableToDecode:       return "We could not decode the response."
+        case .invalidRsponse:   return "The request returned an invalid response."
+        case .unableToDecode:   return "The response data could not be decoded."
+        case .error:            return "Request error."
         }
     }
 
@@ -62,42 +56,38 @@ class Service: NetworkService {
 
         let session = URLSession.shared
         let taskId: TaskId = UUID()
-        do {
-            let request = try self.requestBuilder.build(from: networkRequest)
-            let task = session.dataTask(with: request, completionHandler: { [weak self] (data, response, error) in
+        let request = self.requestBuilder.build(from: networkRequest)
+        let task = session.dataTask(with: request, completionHandler: { [weak self] (data, response, error) in
 
-                if self?.debugMode ?? false {
-                    self?.logger.logResponse(response: response, data: data)
+            if self?.debugMode ?? false {
+                self?.logger.logResponse(response: response, data: data)
+            }
+
+            self?.tasks.removeValue(forKey: taskId)
+
+            do {
+                if let e = error { throw e }
+                guard let resp = response as? HTTPURLResponse else { throw NetworkError.invalidRsponse }
+
+                if resp.statusCode > 299 { throw NetworkError.error(resp.statusCode) }
+
+                guard let responseData = data else {
+                    completion(.success(Response<T.ModelType>(statusCode: resp.statusCode, value: nil)))
+                    return
                 }
 
-                self?.tasks.removeValue(forKey: taskId)
-
-                do {
-                    if let e = error { throw e }
-                    guard let resp = response as? HTTPURLResponse else { throw NetworkError.failed }
-                    guard let responseData = data else { throw NetworkError.noData }
-
-                    if resp.statusCode > 299 { throw NetworkError.badRequest }
-
-                    if let parsedData = try networkRequest.parse(data: responseData) {
-                        completion(Result{
-                            return Response<T.ModelType>(statusCode: resp.statusCode, value: parsedData)
-                        })
-                    } else {
-                        completion(.failure(NetworkError.unableToDecode))
-                    }
-                } catch let error {
-                    completion(.failure(error))
+                if let parsedData = try networkRequest.parse(data: responseData) {
+                    completion(.success(Response<T.ModelType>(statusCode: resp.statusCode, value: parsedData)))
+                } else {
+                    completion(.failure(NetworkError.unableToDecode))
                 }
-            })
-            tasks[taskId] = task
-            task.resume()
-            return taskId
-        } catch {
-            debugPrint("Ivorywhite: Request error: \(error.localizedDescription)")
-            completion(.failure(NetworkError.badRequest))
-        }
-        return UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+            } catch let error {
+                completion(.failure(error))
+            }
+        })
+        tasks[taskId] = task
+        task.resume()
+        return taskId
     }
 
     func request(with url: URL, completion: @escaping (Result<Response<Data>, Error>) -> Void) -> TaskId {
@@ -113,12 +103,16 @@ class Service: NetworkService {
 
             do {
                 if let e = error { throw e }
-                guard let resp = response as? HTTPURLResponse else { throw NetworkError.failed }
-                guard let responseData = data else { throw NetworkError.noData }
+                guard let resp = response as? HTTPURLResponse else { throw NetworkError.invalidRsponse }
 
-                if resp.statusCode > 299 { throw NetworkError.badRequest }
+                if resp.statusCode > 299 { throw NetworkError.error(resp.statusCode) }
 
-                completion(.success(Response<Data>(statusCode: resp.statusCode, value: responseData)))
+                guard let responseData = data else {
+                    completion(.success(Response<Data>(statusCode: resp.statusCode, value: nil)))
+                    return
+                }
+
+                completion(.success(Response(statusCode: resp.statusCode, value: responseData)))
             } catch let error {
                 completion(.failure(error))
             }
