@@ -9,7 +9,7 @@
 import Foundation
 
 class RequestBuilder: RequestBuildable {
-    func build<T: NetworkRequest>(from route: T) throws -> URLRequest {
+    func build<T: NetworkRequest>(from route: T) -> URLRequest {
 
         let url = buildUrl(from: route)
 

@@ -8,6 +8,7 @@
 
 public protocol NetworkRequest {
     associatedtype ModelType: Decodable
+    associatedtype ErrorModelType: Decodable
     var baseURL: URL { get set }
     var path: String { get set }
     var httpMethod: HTTPMethod { get set }
@@ -15,5 +16,6 @@ public protocol NetworkRequest {
     var parameters: Parameters? { get set }
     var encoding: ParameterEncoding? { get set }
     var timeoutInterval: TimeInterval { get set }
-    func parse(data: Data) throws -> ModelType?
+    func parse(data: Data) -> ModelType?
+    func parseError(data: Data) -> ErrorModelType?
 }
