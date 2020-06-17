@@ -33,7 +33,8 @@ public struct Response<T> {
 
 class Service: NetworkService {
 
-    private var tasks: [TaskId: URLSessionTask] = [:]
+    private var tasks = NSCache<NSString, URLSessionTask>()
+    //private var tasks: [TaskId: URLSessionTask] = [:]
     private var debugMode = false
     private let requestBuilder: RequestBuildable
     private let logger: Logging
@@ -45,9 +46,9 @@ class Service: NetworkService {
     }
 
     func cancel(taskId: TaskId) {
-        if let task = tasks[taskId] {
+        if let task = tasks.object(forKey: taskId.uuidString as NSString) {
             task.cancel()
-            tasks.removeValue(forKey: taskId)
+            tasks.removeObject(forKey: taskId.uuidString as NSString)
         }
     }
 
@@ -63,7 +64,7 @@ class Service: NetworkService {
                 self?.logger.logResponse(response: response, data: data)
             }
 
-            self?.tasks.removeValue(forKey: taskId)
+            self?.tasks.removeObject(forKey: taskId.uuidString as NSString)
 
             do {
                 if let e = error { throw e }
@@ -95,7 +96,7 @@ class Service: NetworkService {
                 completion(.failure(error))
             }
         })
-        tasks[taskId] = task
+        tasks.setObject(task, forKey: taskId.uuidString as NSString)
         task.resume()
         return taskId
     }
@@ -109,7 +110,7 @@ class Service: NetworkService {
                 self?.logger.logResponse(response: response, data: data)
             }
 
-            self?.tasks.removeValue(forKey: taskId)
+            self?.tasks.removeObject(forKey: taskId.uuidString as NSString)
 
             do {
                 if let e = error { throw e }
@@ -129,7 +130,7 @@ class Service: NetworkService {
                 completion(.failure(error))
             }
         }
-        tasks[taskId] = task
+        tasks.setObject(task, forKey: taskId.uuidString as NSString)
         task.resume()
         return taskId
     }
