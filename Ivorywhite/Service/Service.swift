@@ -34,7 +34,6 @@ public struct Response<T> {
 class Service: NetworkService {
 
     private var tasks = NSCache<NSString, URLSessionTask>()
-    //private var tasks: [TaskId: URLSessionTask] = [:]
     private var debugMode = false
     private let requestBuilder: RequestBuildable
     private let logger: Logging
