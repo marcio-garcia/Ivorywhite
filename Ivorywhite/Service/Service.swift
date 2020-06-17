@@ -10,8 +10,8 @@ import Foundation
 
 public enum NetworkError: Error, CustomStringConvertible {
     case invalidRsponse
-    case unableToDecode
-    case error(Int)
+    case unableToDecode(Data)
+    case error(Int, Data?)
 
     public var description: String {
         switch self {
@@ -52,7 +52,7 @@ class Service: NetworkService {
     }
 
     func request<T: NetworkRequest>(_ networkRequest: T,
-                                           completion: @escaping (Result<Response<T.ModelType>, Error>) -> Void) -> TaskId {
+                                    completion: @escaping (Result<Response<T.ModelType>, Error>) -> Void) -> TaskId {
 
         let session = URLSession.shared
         let taskId: TaskId = UUID()
@@ -69,7 +69,9 @@ class Service: NetworkService {
                 if let e = error { throw e }
                 guard let resp = response as? HTTPURLResponse else { throw NetworkError.invalidRsponse }
 
-                if resp.statusCode > 299 { throw NetworkError.error(resp.statusCode) }
+                if resp.statusCode > 299 {
+                    throw NetworkError.error(resp.statusCode, data)
+                }
 
                 guard let responseData = data else {
                     completion(.success(Response<T.ModelType>(statusCode: resp.statusCode, value: nil)))
@@ -79,7 +81,7 @@ class Service: NetworkService {
                 if let parsedData = try networkRequest.parse(data: responseData) {
                     completion(.success(Response<T.ModelType>(statusCode: resp.statusCode, value: parsedData)))
                 } else {
-                    completion(.failure(NetworkError.unableToDecode))
+                    completion(.failure(NetworkError.unableToDecode(responseData)))
                 }
             } catch let error {
                 completion(.failure(error))
@@ -105,7 +107,9 @@ class Service: NetworkService {
                 if let e = error { throw e }
                 guard let resp = response as? HTTPURLResponse else { throw NetworkError.invalidRsponse }
 
-                if resp.statusCode > 299 { throw NetworkError.error(resp.statusCode) }
+                if resp.statusCode > 299 {
+                    throw NetworkError.error(resp.statusCode, data)
+                }
 
                 guard let responseData = data else {
                     completion(.success(Response<Data>(statusCode: resp.statusCode, value: nil)))
