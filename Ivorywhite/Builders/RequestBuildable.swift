@@ -7,5 +7,5 @@
 //
 
 public protocol RequestBuildable {
-    func build<T: NetworkRequest>(from route: T) -> URLRequest
+    func build<T: NetworkRequest>(from route: T) -> URLRequest?
 }
