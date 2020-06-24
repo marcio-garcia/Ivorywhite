@@ -9,12 +9,14 @@
 import Foundation
 
 public enum NetworkError<T>: Error, CustomStringConvertible {
+    case badRequest(Int, T)
     case invalidRsponse(URLResponse?)
     case unableToDecode(Int, Data)
     case error(Int, T?)
 
     public var description: String {
         switch self {
+        case .badRequest:       return "Invalid request"
         case .invalidRsponse:   return "The request returned an invalid response."
         case .unableToDecode:   return "The response data could not be decoded."
         case .error:            return "Request error."
@@ -56,7 +58,12 @@ class Service: NetworkService {
 
         let session = URLSession.shared
         let taskId: TaskId = UUID()
-        let request = self.requestBuilder.build(from: networkRequest)
+
+        guard let request = self.requestBuilder.build(from: networkRequest) else {
+            completion(.failure(NetworkError<T>.badRequest(0, networkRequest)))
+            return TaskId()
+        }
+
         let task = session.dataTask(with: request, completionHandler: { [weak self] (data, response, error) in
 
             if self?.debugMode ?? false {

@@ -9,9 +9,11 @@
 import Foundation
 
 class RequestBuilder: RequestBuildable {
-    func build<T: NetworkRequest>(from route: T) -> URLRequest {
+    func build<T: NetworkRequest>(from route: T) -> URLRequest? {
 
-        let url = buildUrl(from: route)
+        guard let url = buildUrl(from: route) else {
+            return nil
+        }
 
         var httpBody: Data?
         if let parameters = route.parameters, let enconding = route.encoding, enconding == .jsonEncoding {
@@ -32,7 +34,7 @@ class RequestBuilder: RequestBuildable {
         return request
     }
 
-    private func buildUrl<T: NetworkRequest>(from route: T) -> URL {
+    private func buildUrl<T: NetworkRequest>(from route: T) -> URL? {
 
         var urlComponents = URLComponents()
         var baseURL = route.baseURL.absoluteString
@@ -58,7 +60,13 @@ class RequestBuilder: RequestBuildable {
             urlComponents.queryItems = queryItems
         }
 
-        return urlComponents.url!
+        guard let url = urlComponents.url else {
+            debugPrint("Ivorywhite error: Could not build URL")
+            debugPrint("Ivorywhite error: \(urlComponents.debugDescription)")
+            return nil
+        }
+
+        return url
     }
 
     private func addAdditionalHeaders<T: NetworkRequest>(_ additionalHeaders: HTTPHeader?,
