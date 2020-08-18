@@ -73,7 +73,7 @@ class Service: NetworkService {
             self?.tasks.removeObject(forKey: taskId.uuidString as NSString)
 
             do {
-                if let e = error { throw e }
+                if let error = error { throw error }
                 guard let resp = response as? HTTPURLResponse else { throw NetworkError<Any>.invalidRsponse(response) }
 
                 if resp.statusCode > 299 {
@@ -119,7 +119,7 @@ class Service: NetworkService {
             self?.tasks.removeObject(forKey: taskId.uuidString as NSString)
 
             do {
-                if let e = error { throw e }
+                if let error = error { throw error }
                 guard let resp = response as? HTTPURLResponse else { throw NetworkError<Any>.invalidRsponse(response) }
 
                 if resp.statusCode > 299 {

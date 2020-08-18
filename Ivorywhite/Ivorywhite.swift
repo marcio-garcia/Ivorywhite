@@ -7,15 +7,15 @@
 //
 
 public final class Ivorywhite {
-    
+
     public static var shared = Ivorywhite()
-    
+
     private var networkService: NetworkService?
     private var logger: Logging?
     private var requestBuilder: RequestBuilder?
-    
+
     private init() {}
-    
+
     public func service(debugMode: Bool) -> NetworkService {
         if let networkService = self.networkService {
             return networkService
