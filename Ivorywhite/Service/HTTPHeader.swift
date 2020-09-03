@@ -6,7 +6,7 @@
 //  Copyright © 2019 Marcio Garcia. All rights reserved.
 //
 
-public typealias HTTPHeader = [String:String]
+public typealias HTTPHeader = [String: String]
 
 enum HTTPHeaderFields: String {
     case contentType = "Content-Type"

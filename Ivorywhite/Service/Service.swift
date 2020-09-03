@@ -10,9 +10,9 @@ import Foundation
 
 public enum NetworkError<T>: Error, CustomStringConvertible {
     case badRequest(Int, T)
-    case invalidRsponse(URLResponse?)
-    case unableToDecode(Int, Data)
-    case error(Int, T?)
+    case invalidRsponse(URLResponse?, T)
+    case unableToDecode(Int, Data, T)
+    case error(Int, T)
 
     public var description: String {
         switch self {
@@ -60,7 +60,7 @@ class Service: NetworkService {
         let taskId: TaskId = UUID()
 
         guard let request = self.requestBuilder.build(from: networkRequest) else {
-            completion(.failure(NetworkError<T>.badRequest(0, networkRequest)))
+            completion(.failure(NetworkError.badRequest(0, networkRequest)))
             return TaskId()
         }
 
@@ -73,15 +73,15 @@ class Service: NetworkService {
             self?.tasks.removeObject(forKey: taskId.uuidString as NSString)
 
             do {
-                if let e = error { throw e }
-                guard let resp = response as? HTTPURLResponse else { throw NetworkError<Any>.invalidRsponse(response) }
+                if let error = error { throw error }
+                guard let resp = response as? HTTPURLResponse else { throw NetworkError.invalidRsponse(response, request) }
 
                 if resp.statusCode > 299 {
                     guard let errorData = data else {
-                        throw NetworkError<T.ErrorModelType>.error(resp.statusCode, nil)
+                        throw NetworkError.error(resp.statusCode, request)
                     }
                     guard let parsedErrorData = networkRequest.parseError(data: errorData) else {
-                        throw NetworkError<Any>.unableToDecode(resp.statusCode, errorData)
+                        throw NetworkError.unableToDecode(resp.statusCode, errorData, request)
                     }
                     throw NetworkError.error(resp.statusCode, parsedErrorData)
                 }
@@ -92,7 +92,7 @@ class Service: NetworkService {
                 }
 
                 guard let parsedData = networkRequest.parse(data: responseData) else {
-                    completion(.failure(NetworkError<Any>.unableToDecode(resp.statusCode, responseData)))
+                    completion(.failure(NetworkError.unableToDecode(resp.statusCode, responseData, request)))
                     return
                 }
 
@@ -119,8 +119,8 @@ class Service: NetworkService {
             self?.tasks.removeObject(forKey: taskId.uuidString as NSString)
 
             do {
-                if let e = error { throw e }
-                guard let resp = response as? HTTPURLResponse else { throw NetworkError<Any>.invalidRsponse(response) }
+                if let error = error { throw error }
+                guard let resp = response as? HTTPURLResponse else { throw NetworkError.invalidRsponse(response, url) }
 
                 if resp.statusCode > 299 {
                     throw NetworkError.error(resp.statusCode, data)

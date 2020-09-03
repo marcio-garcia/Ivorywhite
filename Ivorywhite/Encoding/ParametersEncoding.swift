@@ -6,7 +6,7 @@
 //  Copyright © 2019 Marcio Garcia. All rights reserved.
 //
 
-public typealias Parameters = [String:Any]
+public typealias Parameters = [String: Any]
 
 public enum ParameterEncoding {
     case jsonEncoding
