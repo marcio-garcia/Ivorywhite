@@ -9,7 +9,7 @@
 import Foundation
 
 class RequestBuilder: RequestBuildable {
-    func build<T: NetworkRequest>(from route: T) -> URLRequest? {
+    func build(from route: NetworkRequest) -> URLRequest? {
 
         guard let url = buildUrl(from: route) else {
             return nil
@@ -34,7 +34,7 @@ class RequestBuilder: RequestBuildable {
         return request
     }
 
-    private func buildUrl<T: NetworkRequest>(from route: T) -> URL? {
+    private func buildUrl(from route: NetworkRequest) -> URL? {
 
         var urlComponents = URLComponents()
         var baseURL = route.baseURL.absoluteString
@@ -69,9 +69,9 @@ class RequestBuilder: RequestBuildable {
         return url
     }
 
-    private func addAdditionalHeaders<T: NetworkRequest>(_ additionalHeaders: HTTPHeader?,
-                                                         route: T,
-                                                         request: inout URLRequest) {
+    private func addAdditionalHeaders(_ additionalHeaders: HTTPHeader?,
+                                      route: NetworkRequest,
+                                      request: inout URLRequest) {
 
         if let encoding = route.encoding, encoding == .urlEnconding {
             if request.value(forHTTPHeaderField: HTTPHeaderFields.contentType.rawValue) == nil {

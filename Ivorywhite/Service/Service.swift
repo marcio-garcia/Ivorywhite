@@ -9,10 +9,10 @@
 import Foundation
 
 public enum NetworkError<T>: Error, CustomStringConvertible {
-    case badRequest(Int, T)
+    case badRequest(T)
     case invalidRsponse(URLResponse?, T)
-    case unableToDecode(Int, Data, T)
-    case error(Int, T)
+    case unableToDecode(Data, T)
+    case error(T)
 
     public var description: String {
         switch self {
@@ -26,11 +26,6 @@ public enum NetworkError<T>: Error, CustomStringConvertible {
     public var localizedDescription: String {
         return self.description
     }
-}
-
-public struct Response<T> {
-    public var statusCode: Int
-    public var value: T?
 }
 
 class Service: NetworkService {
@@ -53,61 +48,44 @@ class Service: NetworkService {
         }
     }
 
-    func request<T: NetworkRequest>(_ networkRequest: T,
-                                    completion: @escaping (Result<Response<T.ModelType>, Error>) -> Void) -> TaskId {
+    func request(_ networkRequest: NetworkRequest,
+                 model: ResponseModel,
+                 errorModel: ResponseModel,
+                 completion: @escaping (Response) -> Void) -> TaskId {
 
         let session = URLSession.shared
         let taskId: TaskId = UUID()
 
         guard let request = self.requestBuilder.build(from: networkRequest) else {
-            completion(.failure(NetworkError.badRequest(0, networkRequest)))
+            completion(Response(statusCode: 0, result: .failure(NetworkError.badRequest(networkRequest))))
             return TaskId()
         }
 
-        let task = session.dataTask(with: request, completionHandler: { [weak self] (data, response, error) in
-
-            if self?.debugMode ?? false {
-                self?.logger.logResponse(response: response, data: data)
+        let task = session.dataTask(with: request, completionHandler: { [unowned self] (data, response, error) in
+            if self.debugMode {
+                self.logger.logResponse(response: response, data: data)
             }
 
-            self?.tasks.removeObject(forKey: taskId.uuidString as NSString)
+            self.tasks.removeObject(forKey: taskId.uuidString as NSString)
 
-            do {
-                if let error = error { throw error }
-                guard let resp = response as? HTTPURLResponse else { throw NetworkError.invalidRsponse(response, request) }
-
-                if resp.statusCode > 299 {
-                    guard let errorData = data else {
-                        throw NetworkError.error(resp.statusCode, request)
-                    }
-                    guard let parsedErrorData = networkRequest.parseError(data: errorData) else {
-                        throw NetworkError.unableToDecode(resp.statusCode, errorData, request)
-                    }
-                    throw NetworkError.error(resp.statusCode, parsedErrorData)
-                }
-
-                guard let responseData = data else {
-                    completion(.success(Response<T.ModelType>(statusCode: resp.statusCode, value: nil)))
-                    return
-                }
-
-                guard let parsedData = networkRequest.parse(data: responseData) else {
-                    completion(.failure(NetworkError.unableToDecode(resp.statusCode, responseData, request)))
-                    return
-                }
-
-                completion(.success(Response<T.ModelType>(statusCode: resp.statusCode, value: parsedData)))
-
-            } catch let error {
-                completion(.failure(error))
+            if let error = error {
+                completion(Response(statusCode: 500, result: .failure(error)))
+                return
             }
+
+            let response = self.createResponse(request: request,
+                                               response: response,
+                                               data: data,
+                                               model: model,
+                                               errorModel: errorModel)
+            completion(response)
         })
         tasks.setObject(task, forKey: taskId.uuidString as NSString)
         task.resume()
         return taskId
     }
 
-    func request(with url: URL, completion: @escaping (Result<Response<Data>, Error>) -> Void) -> TaskId {
+    func request(with url: URL, completion: @escaping (ResponseData) -> Void) -> TaskId {
 
         let session = URLSession.shared
         let taskId: TaskId = UUID()
@@ -118,26 +96,72 @@ class Service: NetworkService {
 
             self?.tasks.removeObject(forKey: taskId.uuidString as NSString)
 
-            do {
-                if let error = error { throw error }
-                guard let resp = response as? HTTPURLResponse else { throw NetworkError.invalidRsponse(response, url) }
-
-                if resp.statusCode > 299 {
-                    throw NetworkError.error(resp.statusCode, data)
-                }
-
-                guard let responseData = data else {
-                    completion(.success(Response<Data>(statusCode: resp.statusCode, value: nil)))
-                    return
-                }
-
-                completion(.success(Response(statusCode: resp.statusCode, value: responseData)))
-            } catch let error {
-                completion(.failure(error))
+            if let error = error {
+                let response = ResponseData(statusCode: 500, result: .failure(error))
+                completion(response)
+                return
             }
+
+            guard let resp = response as? HTTPURLResponse else {
+                let response = ResponseData(statusCode: 500,
+                                            result: .failure(NetworkError.invalidRsponse(response, url)))
+                completion(response)
+                return
+            }
+
+            if resp.statusCode > 299 {
+                let response = ResponseData(statusCode: resp.statusCode, result: .failure(NetworkError.error(data)))
+                completion(response)
+                return
+            }
+
+            guard let responseData = data else {
+                let response = ResponseData(statusCode: resp.statusCode, result: .success(nil))
+                completion(response)
+                return
+            }
+
+            let response = ResponseData(statusCode: resp.statusCode, result: .success(responseData))
+            completion(response)
         }
         tasks.setObject(task, forKey: taskId.uuidString as NSString)
         task.resume()
         return taskId
+    }
+
+    private func createResponse(request: URLRequest,
+                                response: URLResponse?,
+                                data: Data?,
+                                model: ResponseModel,
+                                errorModel: ResponseModel) -> Response {
+        guard let resp = response as? HTTPURLResponse else {
+            return Response(statusCode: 500,
+                            result: .failure(NetworkError.invalidRsponse(response, request)))
+        }
+
+        if resp.statusCode > 299 {
+            guard let errorData = data else {
+                return Response(statusCode: resp.statusCode, result: .failure(NetworkError.error(request)))
+            }
+
+            guard let parsedErrorData = errorModel.parse(data: errorData) else {
+                return Response(statusCode: resp.statusCode,
+                                result: .failure(NetworkError.unableToDecode(errorData, request)))
+            }
+
+            return Response(statusCode: resp.statusCode,
+                            result: .failure(NetworkError.error(parsedErrorData)))
+        }
+
+        guard let responseData = data else {
+            return Response(statusCode: resp.statusCode, result: .success(nil))
+        }
+
+        guard let parsedData = model.parse(data: responseData) else {
+            return Response(statusCode: resp.statusCode,
+                            result: .failure(NetworkError.unableToDecode(responseData, request)))
+        }
+
+        return Response(statusCode: resp.statusCode, result: .success(parsedData))
     }
 }
