@@ -6,6 +6,8 @@
 //  Copyright © 2019 Marcio Garcia. All rights reserved.
 //
 
+import Foundation
+
 public protocol NetworkRequest {
     associatedtype ModelType: Decodable
     associatedtype ErrorModelType: Decodable
