@@ -8,37 +8,25 @@
 
 import Foundation
 
-public enum NetworkError<T>: Error, CustomStringConvertible {
-    case badRequest(T)
-    case invalidRsponse(URLResponse?, T)
-    case unableToDecode(Data, T)
-    case error(T)
-
-    public var description: String {
-        switch self {
-        case .badRequest:       return "Invalid request"
-        case .invalidRsponse:   return "The request returned an invalid response."
-        case .unableToDecode:   return "The response data could not be decoded."
-        case .error:            return "Request error."
-        }
+public struct NetworkError: Error {
+    public var localizedDescription: String {
+        return _localizedDescription
     }
 
-    public var localizedDescription: String {
-        return self.description
+    private var _localizedDescription: String = ""
+
+    public init(localizedDescription: String) {
+        self._localizedDescription = localizedDescription
     }
 }
 
 class Service: NetworkService {
 
     private var tasks = NSCache<NSString, URLSessionTask>()
-    private var debugMode = false
-    private let requestBuilder: RequestBuildable
-    private let logger: Logging
+    private var configuration: NetworkConfiguration
 
-    init(debugMode: Bool = false, requestBuilder: RequestBuilder, logger: Logging) {
-        self.debugMode = debugMode
-        self.requestBuilder = requestBuilder
-        self.logger = logger
+    init(configuration: NetworkConfiguration) {
+        self.configuration = configuration
     }
 
     func cancel(taskId: TaskId) {
@@ -50,34 +38,34 @@ class Service: NetworkService {
 
     func request(_ networkRequest: NetworkRequest,
                  model: ResponseModel,
-                 errorModel: ResponseModel,
+                 errorModel: ErrorResponseModel,
                  completion: @escaping (Response) -> Void) -> TaskId {
 
         let session = URLSession.shared
         let taskId: TaskId = UUID()
 
-        guard let request = self.requestBuilder.build(from: networkRequest) else {
-            completion(Response(statusCode: 0, result: .failure(NetworkError.badRequest(networkRequest))))
+        guard let request = configuration.requestBuilder?.build(from: networkRequest) else {
+            completion(Response(statusCode: 0, result: .failure(NetworkError(localizedDescription: "Ivorywhite: Invalid request!"))))
             return TaskId()
         }
 
         let task = session.dataTask(with: request, completionHandler: { [unowned self] (data, response, error) in
-            if self.debugMode {
-                self.logger.logResponse(response: response, data: data)
+            if configuration.debugMode {
+                configuration.logger?.logResponse(response: response, data: data)
             }
 
-            self.tasks.removeObject(forKey: taskId.uuidString as NSString)
+            tasks.removeObject(forKey: taskId.uuidString as NSString)
 
             if let error = error {
                 completion(Response(statusCode: 500, result: .failure(error)))
                 return
             }
 
-            let response = self.createResponse(request: request,
-                                               response: response,
-                                               data: data,
-                                               model: model,
-                                               errorModel: errorModel)
+            let response = createResponse(request: request,
+                                          response: response,
+                                          data: data,
+                                          model: model,
+                                          errorModel: errorModel)
             completion(response)
         })
         tasks.setObject(task, forKey: taskId.uuidString as NSString)
@@ -90,8 +78,8 @@ class Service: NetworkService {
         let session = URLSession.shared
         let taskId: TaskId = UUID()
         let task = session.dataTask(with: url) { [weak self] data, response, error in
-            if self?.debugMode ?? false {
-                self?.logger.logResponse(response: response, data: data)
+            if self?.configuration.debugMode ?? false {
+                self?.configuration.logger?.logResponse(response: response, data: data)
             }
 
             self?.tasks.removeObject(forKey: taskId.uuidString as NSString)
@@ -104,13 +92,13 @@ class Service: NetworkService {
 
             guard let resp = response as? HTTPURLResponse else {
                 let response = ResponseData(statusCode: 500,
-                                            result: .failure(NetworkError.invalidRsponse(response, url)))
+                                            result: .failure(NetworkError(localizedDescription: "Ivorywhite: Invalid response!")))
                 completion(response)
                 return
             }
 
             if resp.statusCode > 299 {
-                let response = ResponseData(statusCode: resp.statusCode, result: .failure(NetworkError.error(data)))
+                let response = ResponseData(statusCode: resp.statusCode, result: .failure(NetworkError(localizedDescription: "Ivorywhite: Network error.")))
                 completion(response)
                 return
             }
@@ -133,24 +121,23 @@ class Service: NetworkService {
                                 response: URLResponse?,
                                 data: Data?,
                                 model: ResponseModel,
-                                errorModel: ResponseModel) -> Response {
+                                errorModel: ErrorResponseModel) -> Response {
         guard let resp = response as? HTTPURLResponse else {
             return Response(statusCode: 500,
-                            result: .failure(NetworkError.invalidRsponse(response, request)))
+                            result: .failure(NetworkError(localizedDescription: "Ivorywhite: Invalid response!")))
         }
 
         if resp.statusCode > 299 {
             guard let errorData = data else {
-                return Response(statusCode: resp.statusCode, result: .failure(NetworkError.error(request)))
+                return Response(statusCode: resp.statusCode, result: .failure(NetworkError(localizedDescription: "Ivorywhite: Network error.")))
             }
 
             guard let parsedErrorData = errorModel.parse(data: errorData) else {
                 return Response(statusCode: resp.statusCode,
-                                result: .failure(NetworkError.unableToDecode(errorData, request)))
+                                result: .failure(NetworkError(localizedDescription: "Ivorywhite: Unable to decode response.")))
             }
 
-            return Response(statusCode: resp.statusCode,
-                            result: .failure(NetworkError.error(parsedErrorData)))
+            return Response(statusCode: resp.statusCode, result: .failure(parsedErrorData))
         }
 
         guard let responseData = data else {
@@ -159,7 +146,7 @@ class Service: NetworkService {
 
         guard let parsedData = model.parse(data: responseData) else {
             return Response(statusCode: resp.statusCode,
-                            result: .failure(NetworkError.unableToDecode(responseData, request)))
+                            result: .failure(NetworkError(localizedDescription: "Ivorywhite: Unable to decode response.")))
         }
 
         return Response(statusCode: resp.statusCode, result: .success(parsedData))

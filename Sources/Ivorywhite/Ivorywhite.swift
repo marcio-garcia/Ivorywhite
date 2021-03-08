@@ -9,23 +9,26 @@
 public final class Ivorywhite {
 
     public static var shared = Ivorywhite()
+    public var defaultService: NetworkService
 
-    private var networkService: NetworkService?
-    private var logger: Logging?
-    private var requestBuilder: RequestBuilder?
+    private init() {
+        var configuration = NetworkConfiguration(debugMode: false)
+        configuration.requestBuilder = RequestBuilder()
+        configuration.logger = Logger()
 
-    private init() {}
+        defaultService = Service(configuration: configuration)
+    }
 
-    public func service(debugMode: Bool) -> NetworkService {
-        if let networkService = self.networkService {
-            return networkService
-        } else {
-            logger = Logger()
-            requestBuilder = RequestBuilder()
-            networkService = Service(debugMode: debugMode,
-                                     requestBuilder: requestBuilder!,
-                                     logger: logger!)
-            return networkService!
-        }
+    public func service(configuration: NetworkConfiguration) -> NetworkService {
+        let config = setDefaultHandlers(configuration: configuration)
+        let networkService = Service(configuration: config)
+        return networkService
+    }
+
+    private func setDefaultHandlers(configuration: NetworkConfiguration) -> NetworkConfiguration {
+        var config = NetworkConfiguration(debugMode: configuration.debugMode)
+        config.logger = configuration.logger ?? Logger()
+        config.requestBuilder = configuration.requestBuilder ?? RequestBuilder()
+        return config
     }
 }
