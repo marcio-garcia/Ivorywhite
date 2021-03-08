@@ -8,8 +8,8 @@
 
 import Foundation
 
-public struct NetworkError: Error {
-    public var localizedDescription: String {
+public struct NetworkError: LocalizedError {
+    public var errorDescription: String? {
         return _localizedDescription
     }
 
