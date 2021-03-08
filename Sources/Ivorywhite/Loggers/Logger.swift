@@ -6,6 +6,8 @@
 //  Copyright © 2020 Oxl Tech. All rights reserved.
 //
 
+import Foundation
+
 class Logger: Logging {
 
     func logRequest<T: NetworkRequest>(route: T, request: URLRequest) {
