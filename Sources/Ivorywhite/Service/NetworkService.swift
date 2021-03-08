@@ -20,11 +20,11 @@ public protocol NetworkService {
 }
 
 public struct Response {
-    var statusCode: Int
-    var result: Result<ResponseModel?, Error>
+    public var statusCode: Int
+    public var result: Result<ResponseModel?, Error>
 }
 
 public struct ResponseData {
-    var statusCode: Int
-    var result: Result<Data?, Error>
+    public var statusCode: Int
+    public var result: Result<Data?, Error>
 }
