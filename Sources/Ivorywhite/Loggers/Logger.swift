@@ -10,7 +10,7 @@ import Foundation
 
 class Logger: Logging {
 
-    func logRequest<T: NetworkRequest>(route: T, request: URLRequest) {
+    func logRequest(route: NetworkRequest, request: URLRequest) {
         print("-------------- Request --------------")
         print("Method: \(route.httpMethod.rawValue)")
         print("BaseURL: \(route.baseURL)")

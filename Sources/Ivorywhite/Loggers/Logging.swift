@@ -9,6 +9,6 @@
 import Foundation
 
 public protocol Logging {
-    func logRequest<T: NetworkRequest>(route: T, request: URLRequest)
+    func logRequest(route: NetworkRequest, request: URLRequest)
     func logResponse(response: URLResponse?, data: Data?)
 }

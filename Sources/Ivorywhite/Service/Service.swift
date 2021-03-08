@@ -49,9 +49,13 @@ class Service: NetworkService {
             return TaskId()
         }
 
+        if configuration.debugMode {
+            configuration.logger?.logRequest(route: networkRequest, request: request)
+        }
+
         let task = session.dataTask(with: request, completionHandler: { [unowned self] (data, response, error) in
-            if self.configuration.debugMode {
-                self.configuration.logger?.logResponse(response: response, data: data)
+            if configuration.debugMode {
+                configuration.logger?.logResponse(response: response, data: data)
             }
 
             tasks.removeObject(forKey: taskId.uuidString as NSString)
