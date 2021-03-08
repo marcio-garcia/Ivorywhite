@@ -50,8 +50,8 @@ class Service: NetworkService {
         }
 
         let task = session.dataTask(with: request, completionHandler: { [unowned self] (data, response, error) in
-            if configuration.debugMode {
-                configuration.logger?.logResponse(response: response, data: data)
+            if self.configuration.debugMode {
+                self.configuration.logger?.logResponse(response: response, data: data)
             }
 
             tasks.removeObject(forKey: taskId.uuidString as NSString)
