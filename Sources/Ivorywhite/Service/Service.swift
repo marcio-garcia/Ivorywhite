@@ -29,24 +29,24 @@ class Service: NetworkService {
         self.configuration = configuration
     }
 
-    func cancel(taskId: TaskId) {
-        if let task = tasks.object(forKey: taskId.uuidString as NSString) {
+    func cancel(taskId: String) {
+        if let task = tasks.object(forKey: taskId as NSString) {
             task.cancel()
-            tasks.removeObject(forKey: taskId.uuidString as NSString)
+            tasks.removeObject(forKey: taskId as NSString)
         }
     }
 
     func request(_ networkRequest: NetworkRequest,
                  model: ResponseModel,
                  errorModel: ErrorResponseModel,
-                 completion: @escaping (Response) -> Void) -> TaskId {
+                 completion: @escaping (Response) -> Void) -> String {
 
         let session = URLSession.shared
-        let taskId: TaskId = UUID()
+        let taskId: String = UUID().uuidString
 
         guard let request = configuration.requestBuilder?.build(from: networkRequest) else {
             completion(Response(statusCode: 0, result: .failure(NetworkError(localizedDescription: "Ivorywhite: Invalid request!"))))
-            return TaskId()
+            return ""
         }
 
         if configuration.debugMode {
@@ -58,7 +58,7 @@ class Service: NetworkService {
                 configuration.logger?.logResponse(response: response, data: data)
             }
 
-            tasks.removeObject(forKey: taskId.uuidString as NSString)
+            tasks.removeObject(forKey: taskId as NSString)
 
             if let error = error {
                 completion(Response(statusCode: 500, result: .failure(error)))
@@ -72,21 +72,21 @@ class Service: NetworkService {
                                           errorModel: errorModel)
             completion(response)
         })
-        tasks.setObject(task, forKey: taskId.uuidString as NSString)
+        tasks.setObject(task, forKey: taskId as NSString)
         task.resume()
         return taskId
     }
 
-    func request(with url: URL, completion: @escaping (ResponseData) -> Void) -> TaskId {
+    func request(with url: URL, completion: @escaping (ResponseData) -> Void) -> String {
 
         let session = URLSession.shared
-        let taskId: TaskId = UUID()
+        let taskId: String = UUID().uuidString
         let task = session.dataTask(with: url) { [weak self] data, response, error in
             if self?.configuration.debugMode ?? false {
                 self?.configuration.logger?.logResponse(response: response, data: data)
             }
 
-            self?.tasks.removeObject(forKey: taskId.uuidString as NSString)
+            self?.tasks.removeObject(forKey: taskId as NSString)
 
             if let error = error {
                 let response = ResponseData(statusCode: 500, result: .failure(error))
@@ -116,7 +116,7 @@ class Service: NetworkService {
             let response = ResponseData(statusCode: resp.statusCode, result: .success(responseData))
             completion(response)
         }
-        tasks.setObject(task, forKey: taskId.uuidString as NSString)
+        tasks.setObject(task, forKey: taskId as NSString)
         task.resume()
         return taskId
     }

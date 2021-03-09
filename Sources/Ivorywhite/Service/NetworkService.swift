@@ -8,15 +8,13 @@
 
 import Foundation
 
-public typealias TaskId = UUID
-
 public protocol NetworkService {
     func request(_ networkRequest: NetworkRequest,
                  model: ResponseModel,
                  errorModel: ErrorResponseModel,
-                 completion: @escaping (Response) -> Void) -> TaskId
-    func request(with url: URL, completion: @escaping (ResponseData) -> Void) -> TaskId
-    func cancel(taskId: TaskId)
+                 completion: @escaping (Response) -> Void) -> String
+    func request(with url: URL, completion: @escaping (ResponseData) -> Void) -> String
+    func cancel(taskId: String)
 }
 
 public struct Response {
