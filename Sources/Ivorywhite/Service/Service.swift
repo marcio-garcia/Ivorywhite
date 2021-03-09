@@ -45,6 +45,7 @@ class Service: NetworkService {
         let taskId: String = UUID().uuidString
 
         guard let request = configuration.requestBuilder?.build(from: networkRequest) else {
+            debugPrint(networkRequest)
             completion(Response(statusCode: 0, result: .failure(NetworkError(localizedDescription: "Ivorywhite: Invalid request!"))))
             return ""
         }

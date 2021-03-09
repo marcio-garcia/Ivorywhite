@@ -17,7 +17,7 @@ public protocol ErrorResponseModel: Error {
 }
 
 public protocol NetworkRequest {
-    var baseURL: URL { get set }
+    var baseURL: URL? { get set }
     var path: String { get set }
     var httpMethod: HTTPMethod { get set }
     var httpHeaders: HTTPHeader? { get set }
