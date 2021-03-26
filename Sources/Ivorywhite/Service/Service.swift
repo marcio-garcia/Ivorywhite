@@ -37,8 +37,8 @@ class Service: NetworkService {
     }
 
     func request(_ networkRequest: NetworkRequest,
-                 model: ResponseModel,
-                 errorModel: ErrorResponseModel,
+                 model: ResponseModel.Type,
+                 errorModel: ErrorResponseModel.Type,
                  completion: @escaping (Response) -> Void) -> String {
 
         let session = URLSession.shared
@@ -125,8 +125,8 @@ class Service: NetworkService {
     private func createResponse(request: URLRequest,
                                 response: URLResponse?,
                                 data: Data?,
-                                model: ResponseModel,
-                                errorModel: ErrorResponseModel) -> Response {
+                                model: ResponseModel.Type,
+                                errorModel: ErrorResponseModel.Type) -> Response {
         guard let resp = response as? HTTPURLResponse else {
             return Response(statusCode: 500,
                             result: .failure(NetworkError(localizedDescription: "Ivorywhite: Invalid response!")))
