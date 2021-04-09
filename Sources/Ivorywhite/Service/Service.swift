@@ -37,7 +37,7 @@ class Service: NetworkService {
     }
 
     func request(_ networkRequest: NetworkRequest,
-                 model: ResponseModel.Type,
+                 model: ResponseModel.Type? = nil,
                  errorModel: ErrorResponseModel.Type,
                  completion: @escaping (Response) -> Void) -> String {
 
@@ -125,7 +125,7 @@ class Service: NetworkService {
     private func createResponse(request: URLRequest,
                                 response: URLResponse?,
                                 data: Data?,
-                                model: ResponseModel.Type,
+                                model: ResponseModel.Type?,
                                 errorModel: ErrorResponseModel.Type) -> Response {
         guard let resp = response as? HTTPURLResponse else {
             return Response(statusCode: 500,
@@ -145,11 +145,15 @@ class Service: NetworkService {
             return Response(statusCode: resp.statusCode, result: .failure(parsedErrorData))
         }
 
+        guard let modelType = model else {
+            return Response(statusCode: resp.statusCode, result: .success(nil))
+        }
+
         guard let responseData = data else {
             return Response(statusCode: resp.statusCode, result: .success(nil))
         }
 
-        guard let parsedData = model.parse(data: responseData) else {
+        guard let parsedData = modelType.parse(data: responseData) else {
             return Response(statusCode: resp.statusCode,
                             result: .failure(NetworkError(localizedDescription: "Ivorywhite: Unable to decode response.")))
         }

@@ -10,7 +10,7 @@ import Foundation
 
 public protocol NetworkService {
     func request(_ networkRequest: NetworkRequest,
-                 model: ResponseModel.Type,
+                 model: ResponseModel.Type?,
                  errorModel: ErrorResponseModel.Type,
                  completion: @escaping (Response) -> Void) -> String
     func request(with url: URL, completion: @escaping (ResponseData) -> Void) -> String
