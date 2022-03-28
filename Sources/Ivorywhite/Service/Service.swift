@@ -42,23 +42,30 @@ class Service: NetworkService {
             configuration.logger?.logRequest(route: networkRequest, request: request)
         }
 
-        let task = session.dataTask(with: request, completionHandler: { [unowned self] (data, response, error) in
-            if configuration.debugMode {
-                configuration.logger?.logResponse(response: response, data: data)
+        let task = session.dataTask(with: request, completionHandler: { [weak self] (data, response, error) in
+            guard let strongSelf = self else {
+                let error = NSError(domain: "Error", code: 500, userInfo: [NSLocalizedDescriptionKey: "Unknown error"])
+                let response = Response(statusCode: 500, result: .failure(error))
+                completion(response)
+                return
             }
 
-            tasks.removeObject(forKey: taskId as NSString)
+            if strongSelf.configuration.debugMode {
+                strongSelf.configuration.logger?.logResponse(response: response, data: data)
+            }
+
+            strongSelf.tasks.removeObject(forKey: taskId as NSString)
 
             if let error = error {
                 completion(Response(statusCode: 500, result: .failure(error)))
                 return
             }
 
-            let response = createResponse(request: request,
-                                          response: response,
-                                          data: data,
-                                          model: model,
-                                          errorModel: errorModel)
+            let response = strongSelf.createResponse(request: request,
+                                                     response: response,
+                                                     data: data,
+                                                     model: model,
+                                                     errorModel: errorModel)
             completion(response)
         })
         tasks.setObject(task, forKey: taskId as NSString)
